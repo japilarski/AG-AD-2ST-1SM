@@ -19,6 +19,13 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library (naniar)
 library(dplyr)
+library(dlookr)
+library(editrules)
+library(VIM)
+library(deducorrect)
+library(ISLR)
+
+
 ```
 #czyszczenie danych
 
@@ -81,5 +88,35 @@ ggplot(data = agencja_nieruchomosci, aes(x = area, y = price))+
   facet_wrap(~bedrooms)
 # W podziale na podwykresy widzimy, że najwięcej NA znajduje sie w nieruchomościach, które mają 3 sypialnie. 
   
+```
+
+#Data cleansing
+
+##Imputacje danych
+```{r}
+
+mydata_knn <- kNN(agencja_nieruchomosci)
+miss_var_summary(mydata_knn)
+
+Price1 <- imputate_na(agencja_nieruchomosci, price, area, method = "mice")
+summary (Price1)
+plot(Price1)
+Price2 <- imputate_outlier (agencja_nieruchomosci, price, method = "capping")
+plot(Price2)
+
+```
+
+##Transformacje
+
+```{r}
+agencja_nieruchomosci$price<-as.numeric(agencja_nieruchomosci$price)
+agencja_nieruchomosci <-read.csv("agencja_nieruchomosci.csv")
+agencja_nieruchomosci %>% 
+  mutate(price_z = transform(agencja_nieruchomosci$price, method ="zscore"),
+         price_minmax = transform(agencja_nieruchomosci$price, method ="minmax")) %>% 
+  select(price_z, price_minmax) %>% 
+  boxplot()
+
+find_skewness(agencja_nieruchomosci)
 ```
 

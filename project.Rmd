@@ -16,3 +16,70 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library (naniar)
+library(dplyr)
+```
+#czyszczenie danych
+
+##Początkowa liczba i proporcje NA
+
+```{r}
+#Ogólne podsumowanie brakujących wartości
+miss_var_summary(agencja_nieruchomosci)
+
+#Brakujące wartości wg. stanu umeblowania
+
+agencja_nieruchomosci %>% 
+  group_by(furnishingstatus) %>% 
+  miss_var_summary()
+
+#
+agencja_nieruchomosci %>% 
+  miss_case_table()
+
+#W tabeli podsumowującej widzimy, że liczba braków na obserwację (wiersz) waga się od 0 do 7. Sposród 545 obserwacji 363 jest kompletnych (bez brakujących wartości) - to 66,6% obserwacji w danych. Tylko 1 obserwacja zawiera 3 brakujące wartości (0,18%)
+
+
+
+```
+
+##Wizualizacja NA
+```{r}
+vis_miss(agencja_nieruchomosci)
+
+gg_miss_fct(agencja_nieruchomosci, fct=furnishingstatus)
+
+gg_miss_fct(agencja_nieruchomosci, fct=stories)
+
+gg_miss_fct(agencja_nieruchomosci, fct=parking)
+
+
+#Dzięki wykresom, które przedstawiają % brakujących danych w zależności od filtru można wywnioskować, iż największy procent brakujących danych jest zazwyczaj w momencie, gdzie jest najwieksza wartośc dodatnia z konkretnych filtrów. Przykładowo największa ilośc NA (price) jest w momencie, gdzie są 3 miejsca parkingowe.
+```
+##Przekroje NA
+
+```{r}
+gg_miss_upset(agencja_nieruchomosci, nsets=3)
+
+#Z poniższego wykresu widzimy ponownie, że najwięcej brakujących danych to cena, która może być ukrywana z konkretnego powodu. Za wysoka cena może odstraszyć potencjalnych klientów bądź ewentualnie brak podanej ceny może być spowodowane brakiem konkretnej ceny za nieruchomośc i chęc zbierania ofert.
+```
+##Zależności między NA a innymi NA
+```{r}
+ggplot(data = agencja_nieruchomosci, aes(x = area, y = price))+
+  geom_point()+
+  geom_miss_point()+
+  scale_color_manual(values = c("darkorange", "cyan4"))+
+  theme_minimal()
+  # W pierwszym przypadku widzimy, że brak brak wartości price był podobnie prawodpodobny do większości przypadków powierzchni domu. Można zauważyć brak NA w wielkości domu od 12 tys. do 16 tys. jednak są tam tylko pojedyncze wartości.
+ 
+ ggplot(data = agencja_nieruchomosci, aes(x = area, y = price))+
+  geom_point()+
+  geom_miss_point()+
+  scale_color_manual(values = c("darkorange", "cyan4"))+
+  theme_minimal()+
+  facet_wrap(~bedrooms)
+# W podziale na podwykresy widzimy, że najwięcej NA znajduje sie w nieruchomościach, które mają 3 sypialnie. 
+  
+```
+

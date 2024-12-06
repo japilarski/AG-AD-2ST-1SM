@@ -14,3 +14,13 @@ output:
 # Wstęp
 
 \`\`\`{r setup, include=FALSE} knitr::opts_chunk\$set(echo = TRUE)
+
+
+
+
+install.packages("dlookr")
+library(dlookr)
+missing_val<-diagnose(agencja_nieruchomosci)
+print(missing_val)
+View(missing_val)
+

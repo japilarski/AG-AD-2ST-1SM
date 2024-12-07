@@ -95,14 +95,8 @@ ggplot(data = agencja_nieruchomosci, aes(x = area, y = price))+
 ##Imputacje danych
 ```{r}
 
-mydata_knn <- kNN(agencja_nieruchomosci)
-miss_var_summary(mydata_knn)
-
-Price1 <- imputate_na(agencja_nieruchomosci, price, area, method = "mice")
-summary (Price1)
-plot(Price1)
-Price2 <- imputate_outlier (agencja_nieruchomosci, price, method = "capping")
-plot(Price2)
+agencja1 <- kNN(agencja_nieruchomosci, k=15)
+miss_var_summary(agencja1)
 
 ```
 

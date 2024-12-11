@@ -114,3 +114,17 @@ agencja_nieruchomosci %>%
 find_skewness(agencja_nieruchomosci)
 ```
 
+##Obserwacje odstające
+
+```{r}
+dane <- read.csv("agencja_nieruchomosci.csv")
+outlier_report <- diagnose_outlier(dane)
+print(outlier_report)
+# zbadano wszystkie zmienne numeryczne
+
+
+boxplot(dane$price, main = "Wartości odstające w zmiennej 'price'")
+
+
+
+```

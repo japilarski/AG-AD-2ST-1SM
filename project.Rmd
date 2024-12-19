@@ -16,13 +16,17 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
-library (naniar)
+library(naniar)
 library(dplyr)
 library(dlookr)
 library(editrules)
 library(VIM)
 library(deducorrect)
 library(ISLR)
+library(validate)
+library(dlookr)
+library(simputation)
+library(mice)
 ```
 
 # czyszczenie danych
@@ -32,7 +36,70 @@ library(ISLR)
 Ogólne podsumowanie brakujących wartości
 
 ```{r}
+agencja_nieruchomosci <- read.csv("agencja_nieruchomosci.csv")
 miss_var_summary(agencja_nieruchomosci)
+```
+
+Wprowadzając podstawowe reguły, na przykład weryfikując czy cena nie jest ujemna, mozemy zweryfikować sensowność naszych danych. Po określeniu reguł są one upraszczane. Funkcja `simplify_rules` pozwala sprawdzić czy nie ma w nich sprzeczności i wyeliminować duplikaty. W tym przypadku wyczyszczenie reguł nie przyniosło zadnych efektów.  
+
+```{r}
+library(validate)
+
+rules <- validator(
+  price > 0 & price < 100000000,
+  area > 0 & area < 100000,
+  bedrooms > -1 & bedrooms < 10,
+  bathrooms > -1 & bathrooms < 10,
+  stories > -1 & stories < 20,
+  parking > -1 & parking < 5,
+  mainroad %in% c("yes", "no"),
+  guestroom %in% c("yes", "no"),
+  basement %in% c("yes", "no"),
+  hotwaterheating %in% c("yes", "no"),
+  airconditioning %in% c("yes", "no"),
+  prefarea %in% c("yes", "no"),
+  furnishingstatus %in% c(
+    "furnished",
+    "semi-furnished",
+    "unfurnished"
+  )
+)
+
+warnings()
+
+validation_results <- confront(agencja_nieruchomosci, rules)
+summary(validation_results)
+barplot(validation_results, main = "price")
+```
+
+Funkcje summary i barplot zgodnie pokazują ze wszystkie nasze dane mają realne wartości. 
+
+Aby ułatwić dalszą pracę można zmienić wartości binarne yes i no na 0 i 1. Wartościom z kolumny furnished nadajemy kolejno wartości 0, 1 i 2 (od unfurnished do furnished).
+
+```{r}
+agencja_nieruchomosci$mainroad <-
+  ifelse(agencja_nieruchomosci$mainroad == "yes", 1, 0)
+agencja_nieruchomosci$guestroom <-
+  ifelse(agencja_nieruchomosci$guestroom == "yes", 1, 0)
+agencja_nieruchomosci$basement <-
+  ifelse(agencja_nieruchomosci$basement == "yes", 1, 0)
+agencja_nieruchomosci$hotwaterheating <-
+  ifelse(agencja_nieruchomosci$hotwaterheating == "yes", 1, 0)
+agencja_nieruchomosci$airconditioning <-
+  ifelse(agencja_nieruchomosci$airconditioning == "yes", 1, 0)
+agencja_nieruchomosci$prefarea <-
+  ifelse(agencja_nieruchomosci$prefarea == "yes", 1, 0)
+
+agencja_nieruchomosci$furnishingstatus <- ifelse(
+  agencja_nieruchomosci$furnishingstatus == "unfurnished",
+  0,
+  ifelse(
+    agencja_nieruchomosci$furnishingstatus == "semi-furnished",
+    1,
+    2
+  )
+)
+agencja_nieruchomosci %>% head(10)
 ```
 
 Brakujące wartości wg. stanu umeblowania
@@ -70,22 +137,22 @@ Na powyższym wykresie widać, że najwięcej brakujących danych jest w kolumni
 ## Zależności pomiędzy brakującymi danymi.
 
 ```{r}
-ggplot(data = agencja_nieruchomosci, aes(x = area, y = price))+
-  geom_point()+
-  geom_miss_point()+
-  scale_color_manual(values = c("darkorange", "cyan4"))+
+ggplot(data = agencja_nieruchomosci, aes(x = area, y = price)) +
+  geom_point() +
+  geom_miss_point() +
+  scale_color_manual(values = c("darkorange", "cyan4")) +
   theme_minimal()
 ```
 
 W pierwszym przypadku widzimy, że brak wartości price był podobnie prawdopodobny do większości przypadków powierzchni domu. Można zauważyć brak NA w wielkości domu od 12 tys. do 16 tys. jednak są tam tylko pojedyncze wartości.
 
 ```{r}
-ggplot(data = agencja_nieruchomosci, aes(x = area, y = price))+
- geom_point()+
- geom_miss_point()+
- scale_color_manual(values = c("darkorange", "cyan4"))+
- theme_minimal()+
- facet_wrap(~bedrooms)
+ggplot(data = agencja_nieruchomosci, aes(x = area, y = price)) +
+  geom_point() +
+  geom_miss_point() +
+  scale_color_manual(values = c("darkorange", "cyan4")) +
+  theme_minimal() +
+  facet_wrap(~bedrooms)
 ```
 
 W podziale na podwykresy widzimy, że najwięcej NA znajduje sie w nieruchomościach, które mają 3 sypialnie.
@@ -94,23 +161,52 @@ W podziale na podwykresy widzimy, że najwięcej NA znajduje sie w nieruchomośc
 
 ## Imputacje danych
 
+Identyfikacja brakujących danych jest kluczowym elementem czyszczenia datasetu. Kolejnym krokiem jest imputacja, czyli uzupełnienie brakujących komórek. Jest wiele metod umożliwiających imputację. 
+
+Jedną z najpopularniejszych metod jest algorytm k najbliższych sąsiadów (kNN). Poniżej wykorzystano tę metodę to uzupełnienia brakujących cen. Niezbędnym jest tutaj określenie ilości sąsiadów (k) branych pod uwagę przy regresji, arbitralnie wybrana została wartość k=15. 
 ```{r}
-agencja1 <- kNN(agencja_nieruchomosci, k=15)
-miss_var_summary(agencja1)
+agencja_nieruchomosci <- kNN(
+  agencja_nieruchomosci,
+  variable = "price",
+  k = 15
+)
+agencja_nieruchomosci <- subset(agencja_nieruchomosci, select = -price_imp)
+miss_var_summary(agencja_nieruchomosci)
+```
+
+Kolejną znaną metodą jest imputacja liniowa. Zmienne brakujące w kolumnie mainroad uzupełnione zostały wykorzystując metodę `impute_lm` pochodzącą z pakietu `simputation`. Wartości te imputujemy na podstawie zmiennych price oraz parking. 
+
+```{r}
+agencja_nieruchomosci <- impute_lm(
+  agencja_nieruchomosci,
+  variable = "mainroad",
+  formula = mainroad ~ price + parking,
+)
+agencja_nieruchomosci$mainroad <- round(agencja_nieruchomosci$mainroad)
+
+miss_var_summary(agencja_nieruchomosci)
+
+```
+
+Dane w ostatniej brakującej kolumnie uzupeniamy metodą `mice` czyli Multivariate Imputation by Chained Equations - wielowymiarowe wypełnianie przez równania łańcuchowe. Jako że uzupeniamy zmienną binarną, korzystamy z metody logreg. 
+
+```{r}
+imputed_data <- mice(agencja_nieruchomosci, method = "logreg", m = 5)
+completed_data <- complete(imputed_data, 1)
+completed_data %>% head(10)
 ```
 
 ## Transformacje
 
 ```{r}
 agencja_nieruchomosci$price <- as.numeric(agencja_nieruchomosci$price)
-agencja_nieruchomosci <- read.csv("agencja_nieruchomosci.csv")
-agencja_nieruchomosci
-  %>% mutate(
-        price_z = transform(agencja_nieruchomosci$price, method ="zscore"),
-        price_minmax = transform(agencja_nieruchomosci$price, method ="minmax")
-      )
-  %>% select(price_z, price_minmax)
-  %>% boxplot()
+agencja_nieruchomosci %>%
+  mutate(
+    price_z = transform(agencja_nieruchomosci$price, method ="zscore"),
+    price_minmax = transform(agencja_nieruchomosci$price, method ="minmax")
+  ) %>%
+  select(price_z, price_minmax) %>%
+  boxplot()
 
 find_skewness(agencja_nieruchomosci)
 ```
@@ -118,10 +214,13 @@ find_skewness(agencja_nieruchomosci)
 ## Obserwacje odstające
 
 ```{r}
-dane <- read.csv("agencja_nieruchomosci.csv")
-outlier_report <- diagnose_outlier(dane)
+outlier_report <- diagnose_outlier(agencja_nieruchomosci)
 
 print(outlier_report)
 
-boxplot(dane$price, main = "Wartości odstające w zmiennej 'price'")
+boxplot(
+  agencja_nieruchomosci$price,
+  main = "Wartości odstające w zmiennej 'price'"
+)
 ```
+

@@ -28,6 +28,11 @@ library(dlookr)
 library(simputation)
 library(mice)
 ```
+```{r}
+agencja_nieruchomosci <- read.csv("agencja_nieruchomosci.csv")
+knitr::kable(head(agencja_nieruchomosci, 10))
+```
+
 
 # czyszczenie danych
 
@@ -36,7 +41,6 @@ library(mice)
 Ogólne podsumowanie brakujących wartości
 
 ```{r}
-agencja_nieruchomosci <- read.csv("agencja_nieruchomosci.csv")
 miss_var_summary(agencja_nieruchomosci)
 ```
 
@@ -195,6 +199,13 @@ imputed_data <- mice(agencja_nieruchomosci, method = "logreg", m = 5)
 completed_data <- complete(imputed_data, 1)
 completed_data %>% head(10)
 ```
+
+Zobaczmy jak wygląda pierwsze 10 wierszy naszego zbioru danych po imputacji: 
+
+```{r}
+knitr::kable(head(agencja_nieruchomosci, 10))
+```
+
 
 ## Transformacje
 

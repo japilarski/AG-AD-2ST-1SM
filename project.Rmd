@@ -15,6 +15,9 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(extrafont)
+library(viridis)
+library(hrbrthemes)
 library(tidyverse)
 library(naniar)
 library(dplyr)
@@ -27,6 +30,8 @@ library(validate)
 library(dlookr)
 library(simputation)
 library(mice)
+library(datarium)
+library(ggplot2)
 ```
 ```{r}
 agencja_nieruchomosci <- read.csv("agencja_nieruchomosci.csv")
@@ -234,5 +239,56 @@ boxplot(
   agencja_nieruchomosci$price,
   main = "Wartości odstające w zmiennej 'price'"
 )
+```
+#Price w tys. oraz area w m2
+```{r}
+completed_data$price <- completed_data$price / 1000
+completed_data$area <- completed_data$area * 0.092903
+
+```
+
+
+#Wykres 1 zmiennej
+```{r}
+ggplot(completed_data, aes(x=price))+
+  geom_histogram(bins = 10)+
+  labs(title="Cena", x="Price", y="Ilość domów")+
+  theme_bw() +
+  facet_grid(~prefarea)
+```
+```{r}
+# Przekształcenie bedrooms na faktor (jeśli potrzebne do podziału)
+completed_data$bedfac <- as.factor(completed_data$bedrooms)
+
+# Wykres zależności ceny od wielkości domu
+ggplot(completed_data, aes(x = area, y = price, color = bedfac)) +
+  geom_point(alpha = 0.7, size = 3) +
+  scale_color_brewer(palette = "Set1") +
+  theme_ipsum() +
+  theme(
+    text = element_text(family = "sans")  # Użyj czcionki sans
+  ) +
+  facet_grid(~prefarea) +
+  labs(
+    title = "Zależność ceny od wielkości domu",
+    x = "Wielkość domu",
+    y = "Cena",
+    color = "Liczba sypialni"
+  )
+
+
+```
+
+#wykres ceny w zaleznosci od metrazu
+
+```{r}
+ggplot(completed_data, aes(x = price, y = area)) +
+  geom_point(aes(color = prefarea)) +  
+  geom_smooth(method = "lm", se = TRUE)
+
+```
+
+```{r}
+
 ```
 

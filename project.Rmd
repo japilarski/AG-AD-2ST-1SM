@@ -102,17 +102,17 @@ miss_var_summary(agencja1)
 ## Transformacje
 
 ```{r}
-agencja_nieruchomosci$price <- as.numeric(agencja_nieruchomosci$price)
 agencja_nieruchomosci <- read.csv("agencja_nieruchomosci.csv")
-agencja_nieruchomosci
-  %>% mutate(
-        price_z = transform(agencja_nieruchomosci$price, method ="zscore"),
-        price_minmax = transform(agencja_nieruchomosci$price, method ="minmax")
-      )
-  %>% select(price_z, price_minmax)
-  %>% boxplot()
-
-find_skewness(agencja_nieruchomosci)
+agencja_nieruchomosci$price <- as.numeric(agencja_nieruchomosci$price)
+agencja_nieruchomosci <- agencja_nieruchomosci %>%
+  mutate(
+    price_z = (price - mean(price, na.rm = TRUE)) / sd(price, na.rm = TRUE),
+    price_minmax = scales::rescale(price, to = c(0, 1))
+  )
+boxplot(agencja_nieruchomosci$price_z, agencja_nieruchomosci$price_minmax,
+        names = c("Z-score", "Min-max"), main = "Porównanie normalizacji danych")
+skewness_results <- sapply(agencja_nieruchomosci, function(x) if (is.numeric(x)) e1071::skewness(x, na.rm = TRUE) else NA)
+skewness_results
 ```
 
 ## Obserwacje odstające

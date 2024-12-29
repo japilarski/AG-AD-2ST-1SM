@@ -15,6 +15,7 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(ggforce)
 library(plotly)
 library(extrafont)
 library(viridis)
@@ -279,6 +280,7 @@ ggplot(completed_data, aes(x = area, y = price, color = bedfac)) +
 
 ```
 
+#Zależność ceny od sypialni z podziałem na prefarea
 ```{r}
 # Wykres zależności ceny od wielkości domu
 ggplot(completed_data, aes(x = bedrooms, y = price, color = bedfac)) +
@@ -315,6 +317,7 @@ plotly::ggplotly(p)
 
 ```
 
+#Rozkład powierzchni domu w zależności od liczby pięter i ceny
 ```{r}
 completed_data$stories1 <- as.factor(completed_data$stories)
 
@@ -343,5 +346,40 @@ summary_table <- completed_data %>%
 print(summary_table)
 
 
+```
+
+#Stworzonie kategori dla cen poprzez średnią i odchylenie standardowe
+```{r}
+mean_price <- mean(completed_data$price)
+sd_price <- sd(completed_data$price)
+
+completed_data$z_score <- (completed_data$price - mean_price) / sd_price
+
+completed_data$price_category <- cut(
+  completed_data$z_score,
+  breaks = c(-Inf, -1, 1, Inf),  # Z-score < -1 = tanie, -1 <= Z <= 1 = średnie, Z > 1 = drogie
+  labels = c("tanie", "średnie", "drogie")
+)
+
+# Wynik
+print(completed_data)
+
+category_counts <- completed_data %>%
+  group_by(price_category) %>%
+  summarise(count = n())
+
+```
+
+#Wykres przedstawiający rozkład cen na kategorię tani, średni i drogi
+```{r}
+ggplot(category_counts) +
+  aes(
+    x0 = 0, y0 = 0, # position of pie center
+    r0 = 0, r = 1,  # inner and outer radius
+    amount = count, # size of pie slices
+    fill = price_category
+  ) + 
+  geom_arc_bar(stat = "pie") +
+  coord_fixed()  
 ```
 

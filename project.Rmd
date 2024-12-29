@@ -300,8 +300,10 @@ ggplot(completed_data, aes(x = bedrooms, y = price, color = bedfac)) +
 #wykres ceny w zaleznosci od metrazu
 
 ```{r}
+completed_data$prefarea1 <- as.factor(completed_data$prefarea)  # Zamiana na factor
+
 p <- ggplot(completed_data, aes(x = price, y = area)) +
-  geom_point(aes(color = prefarea)) +  
+  geom_point(aes(color = prefarea1)) +  
   geom_smooth(method = "lm", se = TRUE)+
   xlab("Cena")+
   ylab("Powierzchnia domu")+
@@ -314,6 +316,32 @@ plotly::ggplotly(p)
 ```
 
 ```{r}
+completed_data$stories1 <- as.factor(completed_data$stories)
+
+ggplot(completed_data, aes(x = stories, y = area)) +
+  geom_boxplot(aes(group = stories), outlier.shape = NA) + 
+  geom_jitter(aes(color = price), width = 0.2, alpha = 0.7) +
+  scale_color_gradient(name = "Cena", low = "lightblue", high = "navyblue") +
+  xlab("Liczba pięter") +
+  ylab("Powierzchnia domu") +
+  ggtitle("Rozkład powierzchni domu w zależności od liczby pięter i ceny") +
+  theme_minimal()
+
+library(dplyr)
+
+summary_table <- completed_data %>%
+  group_by(stories1) %>%
+  summarise(
+    Srednia_powierzchnia = mean(area, na.rm = TRUE),
+    Mediana_powierzchnia = median(area, na.rm = TRUE),
+    Odchylenie_standardowe_powierzchnia = sd(area, na.rm = TRUE),
+    Srednia_cena = mean(price, na.rm = TRUE),
+    Mediana_cena = median(price, na.rm = TRUE),
+    Odchylenie_standardowe_cena = sd(price, na.rm = TRUE),
+    Liczba_obserwacji = n()
+  )
+print(summary_table)
+
 
 ```
 

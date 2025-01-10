@@ -123,5 +123,22 @@ outlier_report <- diagnose_outlier(dane)
 
 print(outlier_report)
 
-boxplot(dane$price, main = "Wartości odstające w zmiennej 'price'")
+
+Q1 <- quantile(dane$stories, 0.25, na.rm = TRUE)
+Q3 <- quantile(dane$stories, 0.75, na.rm = TRUE)
+IQR <- Q3 - Q1
+
+# Wartości odstające
+lower_bound <- Q1 - 1.5 * IQR
+upper_bound <- Q3 + 1.5 * IQR
+outliers <- dane$stories[dane$stories < lower_bound | dane$stories > upper_bound]
+
+# Wyświetlenie wartości odstających
+print(outliers)
+
+# Wykres pudełkowy
+boxplot(dane$stories, main = "Wartości odstające w zmiennej 'stories'",
+        col = "lightblue", horizontal = TRUE)
+
 ```
+W tabeli widzimy, że dla każda zmienna zawiera obserwacje odstające, najwięcej zawiera zmianna "stories", bo aż 41, jest to największa częstotliwość pojawiania się obserwacji odstających.

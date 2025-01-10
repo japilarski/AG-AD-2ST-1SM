@@ -237,10 +237,8 @@ outlier_report <- diagnose_outlier(agencja_nieruchomosci)
 
 print(outlier_report)
 
-boxplot(
-  agencja_nieruchomosci$price,
-  main = "Wartości odstające w zmiennej 'price'"
-)
+
+
 ```
 #Price w tys. oraz area w m2
 ```{r}

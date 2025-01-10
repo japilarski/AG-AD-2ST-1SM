@@ -242,8 +242,8 @@ print(outlier_report)
 W tabeli widzimy, że najwięcej obserwacji odstających zawiera zmienna "stories", jest ich aż 47, częstotliwość pojawiania się obserwacji odstającej to 7,5.
 
 ```{r}
-
-# Oblicz IQR
+dane <- (agencja_nieruchomosci)
+#obliczam kwantyle
 Q1 <- quantile(dane$stories, 0.25, na.rm = TRUE)
 Q3 <- quantile(dane$stories, 0.75, na.rm = TRUE)
 IQR <- Q3 - Q1
@@ -253,14 +253,26 @@ lower_bound <- Q1 - 1.5 * IQR
 upper_bound <- Q3 + 1.5 * IQR
 outliers <- dane$stories[dane$stories < lower_bound | dane$stories > upper_bound]
 
-# Wyświetlenie wartości odstających
 print(outliers)
 
-# Wykres pudełkowy
 boxplot(dane$stories, main = "Wartości odstające w zmiennej 'stories'",
         col = "lightblue", horizontal = TRUE)
 
 ```
+
+
+```{r}
+
+#filtrowanie danych 
+dane_cleaned <- dane %>%
+  filter(stories >= lower_bound, stories <= upper_bound)
+
+boxplot(dane_cleaned$stories, main = "Wartości odstające w zmiennej 'stories'",
+        col = "lightblue", horizontal = TRUE)
+
+```
+
+Wykres pudełkowy dla zmiennej "stories" bez wartości odstających - został nałożony filtr nieuwzględniający wartości odstających. 
 
 #Price w tys. oraz area w m2
 ```{r}

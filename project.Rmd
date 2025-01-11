@@ -267,7 +267,7 @@ boxplot(dane$stories, main = "Wartości odstające w zmiennej 'stories'",
 dane_cleaned <- dane %>%
   filter(stories >= lower_bound, stories <= upper_bound)
 
-boxplot(dane_cleaned$stories, main = "Wartości odstające w zmiennej 'stories'",
+boxplot(dane_cleaned$stories, main = "wykres pudełkowy dla zmiennej 'stories' bez wartości odstających",
         col = "lightblue", horizontal = TRUE)
 
 ```

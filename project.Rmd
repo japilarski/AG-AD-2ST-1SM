@@ -7,7 +7,7 @@ output:
     toc: true
     toc_depth: 2
     number_sections: true
-    theme: cosmo
+    theme: default
     highlight: tango
 # output: 
 #   rmdformats::material:

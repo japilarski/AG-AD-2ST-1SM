@@ -480,7 +480,7 @@ completed_data %>%
 ```
 ##Statystyka opisowa - wizualizacje
 
-Podstawowe statystyki opisowe cen nieruchomości jeżeli znajdują się w preferowanym obszarze (tak/nie - 1/0)
+Podstawowe statystyki opisowe cen nieruchomości jeżeli znajdują się w preferowanym obszarze (tak/nie - 1/0).
 ```{r}
 install.packages("ggstatsplot")
 library(ggstatsplot)
@@ -500,7 +500,7 @@ completed_data %>%
   )
 
 ```
-##Wykres kołowy - Jaki procent nieruchomości o powierzchni z danego przedziału posiada posiada wskazaną liczbę łazienek
+##Wykres kołowy - Jaki procent nieruchomości o powierzchni z danego przedziału posiada posiada wskazaną liczbę łazienek.
 Nawet w domach o największej powierzni jest tylko jedna łazienka.
 
 ```{r}
@@ -518,4 +518,14 @@ completed_data %>%
     y=area_category,
     x=bathrooms
   )
+```
+##Korelogram przedstawiający korelacje pomiędzy zmiennymi dla domów z dwoma i sześcioma sypialniami z podziałem na dwie grupy - czy znajdują się przy głównej ulicy (1), czy nie (0).
+```{r}
+grouped_ggcorrmat(
+  data         = dplyr::filter(completed_data, bedrooms %in% c(2,6)),
+  type         = "robust",
+  colors       = c("#cbac43", "white", "#550000"),
+  grouping.var = mainroad,
+  matrix.type  = "lower"
+)
 ```

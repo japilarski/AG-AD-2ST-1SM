@@ -478,7 +478,7 @@ completed_data %>%
   bold_labels() %>% 
   add_p(pvalue_fun = ~ style_pvalue(.x, digits = 2))
 ```
-##Statystyka opisowa - wizualizacje
+##Wykres wiolinowy
 
 Podstawowe statystyki opisowe cen nieruchomości jeżeli znajdują się w preferowanym obszarze (tak/nie - 1/0).
 ```{r}
@@ -500,7 +500,8 @@ completed_data %>%
   )
 
 ```
-##Wykres kołowy - Jaki procent nieruchomości o powierzchni z danego przedziału posiada posiada wskazaną liczbę łazienek.
+##Wykres kołowy
+Jaki procent nieruchomości o powierzchni z danego przedziału posiada posiada wskazaną liczbę łazienek.
 Nawet w domach o największej powierzni jest tylko jedna łazienka.
 
 ```{r}
@@ -519,7 +520,8 @@ completed_data %>%
     x=bathrooms
   )
 ```
-##Korelogram przedstawiający korelacje pomiędzy zmiennymi dla domów z dwoma i sześcioma sypialniami z podziałem na dwie grupy - czy znajdują się przy głównej ulicy (1), czy nie (0).
+##Korelogram 
+Korelogram przedstawiający korelację pomiędzy zmiennymi dla domów z dwoma i sześcioma sypialniami z podziałem na dwie grupy - czy znajdują się przy głównej ulicy (1), czy nie (0).
 ```{r}
 grouped_ggcorrmat(
   data         = dplyr::filter(completed_data, bedrooms %in% c(2,6)),

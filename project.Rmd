@@ -500,7 +500,7 @@ completed_data %>%
   )
 
 ```
-##Procentowy udział powierzchni nieruchomości w zależności od liczby łazienek
+##Wykres kołowy - Jaki procent nieruchomości o powierzchni z danego przedziału posiada posiada wskazaną liczbę łazienek
 Nawet w domach o największej powierzni jest tylko jedna łazienka.
 
 ```{r}

@@ -500,3 +500,22 @@ completed_data %>%
   )
 
 ```
+##Procentowy udział powierzchni nieruchomości w zależności od liczby łazienek
+Nawet w domach o największej powierzni jest tylko jedna łazienka.
+
+```{r}
+
+completed_data$area_category <- cut(
+  completed_data$area, 
+  breaks = c(0, 2000, 5000, 10000, 16200),  # Granice przedziałów
+  labels = c("0-2000", "2001-5000", "5001-10000", "10001-1620"),  # Nazwy przedziałów
+  right = TRUE  # Prawostronne przedziały (np. 0-50 oznacza <=50)
+)
+
+completed_data %>%
+  filter(bathrooms %in% c(1, 2 ,3, 4))%>%
+  ggpiestats(
+    y=area_category,
+    x=bathrooms
+  )
+```

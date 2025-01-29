@@ -501,3 +501,13 @@ grouped_ggcorrmat(
 
 
 # Podsumowanie i wnioski
+Raport przedstawia kompleksową analizę danych dotyczących nieruchomości, koncentrując się na brakujących wartościach, czyszczeniu danych oraz metodach imputacji. Dane zostały poddane weryfikacji pod kątem błędów logicznych i spójności, a następnie przekształcone w celu ułatwienia dalszej analizy. Kluczowe wnioski:
+
+1. Brakujące dane – Największy problem stanowi brak informacji o cenach nieruchomości. Analiza wskazuje, że brak tych danych może wynikać z praktyk rynkowych, np. ukrywania cen w celu negocjacji.
+2. Weryfiacjka jakości danych – Przyjęte reguły walidacji wykazały, że wszystkie wartości mieszczą się w logicznych zakresach, co pozwoliło na dalsze przetwarzanie danych.
+3. Imputacja brakujących wartości – Zastosowano różne metody uzupełniania brakujących danych. Algorytm k najbliższych sąsiadów (kNN) do imputacji brakujących cen. Regresję liniową do uzupełnienia zmiennych binarnych. Metodę MICE do imputacji danych wielowymiarowych.
+1. Transformacje i analiza odstających wartości – Wykryto i usunięto wartości odstające w kolumnie dotyczącej liczby pięter. Zastosowano także normalizację danych, co pozwoliło na bardziej precyzyjne analizy.
+2. Wizualizacja i eksploracja danych – Przedstawiono szereg wykresów ukazujących zależności między zmiennymi, m.in. wpływ liczby sypialni na cenę, powiązanie powierzchni nieruchomości z jej wartością oraz rozkład cen w zależności od dostępności do głównej drogi.
+3. Kategoryzacja cen – Na podstawie średniej i odchylenia standardowego dokonano podziału nieruchomości na trzy kategorie cenowe: tanie, średnie i drogie, co pozwoliło lepiej zrozumieć strukturę cenową zbioru danych.
+
+Podjęte kroki znacząco poprawiły jakość danych i umożliwiły bardziej rzetelną analizę rynku nieruchomości. Zastosowane metody przetwarzania i imputacji danych pozwalają na dalsze wykorzystanie zbioru do prognozowania cen oraz analizy trendów rynkowych. W niniejszyn raporcie skupiono się na technicznych aspektach analizy danych, kolejnym krokiem mogłaby być bardziej zaawansowana analiza statystyczna, np. modelowanie regresyjne czy klasyfikacja, co pozwoliłoby na jeszcze głębsze zrozumienie rynku nieruchomości. Wturnym i mniej poruszonym zagadnieniem była sama formalna analiza opisowa danych. 

@@ -342,6 +342,9 @@ plotly::ggplotly(p)
 ```
 
 ## Rozkład powierzchni domu w zależności od liczby pięter
+
+Poniższy wykres przedstawia rozkład powierzchni domu w zależności od liczby pięter i ceny. Dzięki niej możemy zaobserwować, iż najwięcej mieszkań posiada 1 bądź 2 piętra. Dodatkowo możemy przeanalizować jak kształtuje się cena wśród takich mieszkań. Interpretując wykres dostrzegamy, iż im mniejsza powierzchnia oraz liczba pięter tym niższa cena.
+
 ```{r}
 completed_data$pietra <- as.factor(completed_data$stories)
 
@@ -353,7 +356,11 @@ ggplot(completed_data, aes(x = stories, y = area)) +
   ylab("Powierzchnia domu") +
   ggtitle("Rozkład powierzchni domu w zależności od liczby pięter i ceny") +
   theme_minimal()
+```
 
+By móc się dokładnie przyjrzeć jak prezentują się wartości dt. powierzchni w podziale na liczbę pokoi została stworzona tabela. Najwyższy średni metraż posiadają mieszkania 4 pokojowe, co nie powinno dziwić. Natomiast najniższy średni metraż oraz medianę posiadają mieszkania 2 pokojowe.
+
+```{r}
 summary_table <- completed_data %>%
   group_by(pietra) %>%
   summarise(
@@ -444,10 +451,14 @@ completed_data %>%
     missing = "no",
     label = price ~ "Cena") %>%
   modify_header(label ~ "**Zmienna**") %>%
-  modify_caption("**Tabela 1. Rozkład cen wg liczby pokoi**") %>%
+  modify_caption("**Rozkład cen wg liczby pokoi**") %>%
   bold_labels() %>% 
   add_p(pvalue_fun = ~ style_pvalue(.x, digits = 2))
 ```
+Mieszkania 5-pokojowe mają najwyższą średnią cenę spośród wszystkich typów mieszkań icechują się również najwyższym odchyleniem standardowym, co oznacza największe wahania cen w tej kategorii.
+Mieszkania 1-pokojowe mają najniższą medianę ceny, co sugeruje, że to w tej grupie najczęściej znajdziemy najtańsze nieruchomości.
+Najwyższe ceny maksymalne występują jednak w mieszkaniach 3- i 4-pokojowych.
+
 ## Wykres wiolinowy
 
 Podstawowe statystyki opisowe cen nieruchomości jeżeli znajdują się w preferowanym obszarze (tak/nie - 1/0).
@@ -465,6 +476,7 @@ completed_data %>%
     x=prefarea
   )
 ```
+
 ## Wykres kołowy
 Jaki procent nieruchomości o powierzchni z danego przedziału posiada posiada wskazaną liczbę łazienek.
 Nawet w domach o największej powierzni jest tylko jedna łazienka.
@@ -486,9 +498,13 @@ completed_data %>%
   )
 ```
 
+Jaki procent nieruchomości o powierzchni z danego przedziału posiada posiada wskazaną liczbę łazienek.
+Nawet w domach o największej powierzni dominuje tylko jedna łazienka. 4 łazienki ma jedynie jedna nieruchomość w zbiorze danych, na wykresie jest nawet niewidoczna - występuje w nieruchomość z przedziału 5001 - 10 000. Co ciekawe, większy procent nieruchomości z dwiema łazienkami jest dla nieruchomości z przedziału 5001 - 10 000, niż z 10 001 - 16 200.
+
 ## Korelogram 
 
-Korelogram przedstawiający korelację pomiędzy zmiennymi dla domów z dwoma i sześcioma sypialniami z podziałem na dwie grupy - czy znajdują się przy głównej ulicy (1), czy nie (0).
+Korelogram przedstawiający korelację pomiędzy zmiennymi dla domów z dwoma i sześcioma sypialniami z podziałem na dwie grupy - czy znajdują się przy głównej ulicy (1), czy nie (0). ⁠Poniższy wykres pozwala nam przeanalizować wpływ ilości sypialni na cenę. Najdroższe mieszkanie posiadają 3 i 4 sypialnie. Dodatkowo duży wpływ ma preferowana lokalizacja.
+
 ```{r}
 grouped_ggcorrmat(
   data         = dplyr::filter(completed_data, bedrooms %in% c(2,6)),
@@ -499,15 +515,14 @@ grouped_ggcorrmat(
 )
 ```
 
-
 # Podsumowanie i wnioski
 Raport przedstawia kompleksową analizę danych dotyczących nieruchomości, koncentrując się na brakujących wartościach, czyszczeniu danych oraz metodach imputacji. Dane zostały poddane weryfikacji pod kątem błędów logicznych i spójności, a następnie przekształcone w celu ułatwienia dalszej analizy. Kluczowe wnioski:
 
 1. Brakujące dane – Największy problem stanowi brak informacji o cenach nieruchomości. Analiza wskazuje, że brak tych danych może wynikać z praktyk rynkowych, np. ukrywania cen w celu negocjacji.
 2. Weryfiacjka jakości danych – Przyjęte reguły walidacji wykazały, że wszystkie wartości mieszczą się w logicznych zakresach, co pozwoliło na dalsze przetwarzanie danych.
 3. Imputacja brakujących wartości – Zastosowano różne metody uzupełniania brakujących danych. Algorytm k najbliższych sąsiadów (kNN) do imputacji brakujących cen. Regresję liniową do uzupełnienia zmiennych binarnych. Metodę MICE do imputacji danych wielowymiarowych.
-1. Transformacje i analiza odstających wartości – Wykryto i usunięto wartości odstające w kolumnie dotyczącej liczby pięter. Zastosowano także normalizację danych, co pozwoliło na bardziej precyzyjne analizy.
-2. Wizualizacja i eksploracja danych – Przedstawiono szereg wykresów ukazujących zależności między zmiennymi, m.in. wpływ liczby sypialni na cenę, powiązanie powierzchni nieruchomości z jej wartością oraz rozkład cen w zależności od dostępności do głównej drogi.
-3. Kategoryzacja cen – Na podstawie średniej i odchylenia standardowego dokonano podziału nieruchomości na trzy kategorie cenowe: tanie, średnie i drogie, co pozwoliło lepiej zrozumieć strukturę cenową zbioru danych.
+4. Transformacje i analiza odstających wartości – Wykryto i usunięto wartości odstające w kolumnie dotyczącej liczby pięter. Zastosowano także normalizację danych, co pozwoliło na bardziej precyzyjne analizy.
+5. Wizualizacja i eksploracja danych – Przedstawiono szereg wykresów ukazujących zależności między zmiennymi, m.in. wpływ liczby sypialni na cenę, powiązanie powierzchni nieruchomości z jej wartością oraz rozkład cen w zależności od dostępności do głównej drogi.
+6. Kategoryzacja cen – Na podstawie średniej i odchylenia standardowego dokonano podziału nieruchomości na trzy kategorie cenowe: tanie, średnie i drogie, co pozwoliło lepiej zrozumieć strukturę cenową zbioru danych.
 
 Podjęte kroki znacząco poprawiły jakość danych i umożliwiły bardziej rzetelną analizę rynku nieruchomości. Zastosowane metody przetwarzania i imputacji danych pozwalają na dalsze wykorzystanie zbioru do prognozowania cen oraz analizy trendów rynkowych. W niniejszyn raporcie skupiono się na technicznych aspektach analizy danych, kolejnym krokiem mogłaby być bardziej zaawansowana analiza statystyczna, np. modelowanie regresyjne czy klasyfikacja, co pozwoliłoby na jeszcze głębsze zrozumienie rynku nieruchomości. Wturnym i mniej poruszonym zagadnieniem była sama formalna analiza opisowa danych. 

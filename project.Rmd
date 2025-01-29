@@ -485,6 +485,9 @@ completed_data %>%
 ##Wykres wiolinowy
 
 Podstawowe statystyki opisowe cen nieruchomości jeżeli znajdują się w preferowanym obszarze (tak/nie - 1/0).
+Dla obu przypadków są widoczne obserwacje odstające dla zmiennej price. Mediana cen nieruchomości dla tych znajdujących się w preferowanej okolicy jest większa. W bazie więcej jest nieruchomości, które nie znajdują sie w preferowanej okolicy.
+W przypadku nieruchomości nieznajdujących się w preferowanym obszarze, pierwsza część obserwacji ma większe zagęszczenie przy niskiej cenie 2 - 4 tys., a ceny nad medianą mają większą rozpiętość - od około 4 do 12 tys. 
+Dla nieruchomości w preferowanym obszarze wiolina jest najszersza w okolicach mediany - najwięcej obserwacji kiedy cena jest bliska wartości środkowej - około 6 tys. 
 
 ```{r}
 install.packages("ggstatsplot")

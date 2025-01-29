@@ -7,7 +7,7 @@ output:
     toc: true
     toc_depth: 2
     number_sections: true
-    theme: dark
+    theme: paper
     highlight: tango
 ---
 
@@ -18,7 +18,7 @@ knitr::opts_chunk$set(
   echo = TRUE,
   warning = FALSE,
   message = FALSE,
-  results="asis"
+  results = "asis"
 )
 library(ggforce)
 library(plotly)
@@ -29,26 +29,30 @@ library(rmdformats)
 library(tidyverse)
 library(naniar)
 library(dplyr)
-library(dlookr)
 library(editrules)
 library(VIM)
 library(deducorrect)
 library(ISLR)
-library(validate)
 library(dlookr)
 library(simputation)
 library(mice)
 library(datarium)
 library(ggplot2)
 library(kableExtra)
+library(validate)
+library(gtsummary)
+library(ggstatsplot)
+library(statsExpressions)
+library(questionr)
 ```
 
 ```{r}
 agencja_nieruchomosci <- read.csv("agencja_nieruchomosci.csv")
-knitr::kable(head(agencja_nieruchomosci, 10))
+knitr::kable(head(agencja_nieruchomosci, 10)) %>%
+  kable_styling(font_size = 10)
 ```
 
-# czyszczenie danych
+# Dane brakujące
 
 ## Początkowa liczba i proporcje NA
 
@@ -61,7 +65,6 @@ knitr::kable(miss_var_summary(agencja_nieruchomosci))
 Wprowadzając podstawowe reguły, na przykład weryfikując czy cena nie jest ujemna, mozemy zweryfikować sensowność naszych danych. Po określeniu reguł są one upraszczane. Funkcja `simplify_rules` pozwala sprawdzić czy nie ma w nich sprzeczności i wyeliminować duplikaty. W tym przypadku wyczyszczenie reguł nie przyniosło zadnych efektów.
 
 ```{r}
-library(validate)
 
 rules <- validator(
   price > 0 & price < 100000000,
@@ -90,7 +93,7 @@ knitr::kable(summary(validation_results))
 barplot(validation_results, main = "price")
 ```
 
-Funkcje summary i barplot zgodnie pokazują ze wszystkie nasze dane mają realne wartości.
+Funkcje `summary` i `barplot` zgodnie pokazują ze wszystkie nasze dane mają realne wartości.
 
 Aby ułatwić dalszą pracę można zmienić wartości binarne yes i no na 0 i 1. Wartościom z kolumny furnished nadajemy kolejno wartości 0, 1 i 2 (od unfurnished do furnished).
 
@@ -117,7 +120,8 @@ agencja_nieruchomosci$furnishingstatus <- ifelse(
     2
   )
 )
-knitr::kable(head(agencja_nieruchomosci, 10))
+knitr::kable(head(agencja_nieruchomosci, 10)) %>%
+  kable_styling(font_size = 10)
 ```
 
 Brakujące wartości wg. stanu umeblowania
@@ -178,7 +182,7 @@ ggplot(data = agencja_nieruchomosci, aes(x = area, y = price)) +
 
 W podziale na podwykresy widzimy, że najwięcej NA znajduje sie w nieruchomościach, które mają 3 sypialnie.
 
-# Data cleansing
+# Czyszczenie danych
 
 ## Imputacje danych
 
@@ -209,18 +213,20 @@ knitr::kable(miss_var_summary(agencja_nieruchomosci))
 
 ```
 
-Dane w ostatniej brakującej kolumnie uzupeniamy metodą `mice` czyli Multivariate Imputation by Chained Equations - wielowymiarowe wypełnianie przez równania łańcuchowe. Jako że uzupeniamy zmienną binarną, korzystamy z metody logreg.
+Dane w ostatniej brakującej kolumnie uzupełniamy metodą `mice` czyli Multivariate Imputation by Chained Equations - wielowymiarowe wypełnianie przez równania łańcuchowe. Jako że uzupełniamy zmienną binarną, korzystamy z metody `logreg`.
 
-```{r}
-imputed_data <- mice(agencja_nieruchomosci, method = "logreg", m = 5)
+```{r message=FALSE, }
+imputed_data <- mice(agencja_nieruchomosci, method = "logreg", m = 5, printFlag = FALSE)
 completed_data <- complete(imputed_data, 1)
-knitr::kable(completed_data %>% head(10))
+agencja_nieruchomosci <- completed_data
 ```
 
 Zobaczmy jak wygląda pierwsze 10 wierszy naszego zbioru danych po imputacji:
 
 ```{r}
-knitr::kable(head(agencja_nieruchomosci, 10))
+knitr::kable(head(agencja_nieruchomosci, 10)) %>%
+  kable_styling(font_size = 10)
+```
 ```
 
 ## Transformacje
@@ -235,34 +241,26 @@ completed_data <- completed_data %>%
 boxplot(completed_data$price_z, completed_data$price_minmax,
         names = c("Z-score", "Min-max"), main = "Porównanie normalizacji danych")
 skewness_results <- sapply(completed_data, function(x) if (is.numeric(x)) e1071::skewness(x, na.rm = TRUE) else NA)
-skewness_results
+knitr::kable(skewness_results)
 
 ```
 
 ## Obserwacje odstające
 
 ```{r}
-outlier_report <- diagnose_outlier(agencja_nieruchomosci)
-
-print(outlier_report)
-
+outlier_report <- diagnose_outlier(completed_data)
+knitr::kable(outlier_report)
 ```
-
-W tabeli widzimy, że najwięcej obserwacji odstających zawiera zmienna "stories", jest ich aż 47, częstotliwość pojawiania się obserwacji odstającej to 7,5.
 
 ```{r}
 dane <- (agencja_nieruchomosci)
-#obliczam kwantyle
 Q1 <- quantile(dane$stories, 0.25, na.rm = TRUE)
 Q3 <- quantile(dane$stories, 0.75, na.rm = TRUE)
 IQR <- Q3 - Q1
 
-# Wartości odstające
 lower_bound <- Q1 - 1.5 * IQR
 upper_bound <- Q3 + 1.5 * IQR
 outliers <- dane$stories[dane$stories < lower_bound | dane$stories > upper_bound]
-
-print(outliers)
 
 boxplot(dane$stories, main = "Wartości odstające w zmiennej 'stories'",
         col = "lightblue", horizontal = TRUE)
@@ -270,8 +268,6 @@ boxplot(dane$stories, main = "Wartości odstające w zmiennej 'stories'",
 ```
 
 ```{r}
-
-#filtrowanie danych 
 dane_cleaned <- dane %>%
   filter(stories >= lower_bound, stories <= upper_bound)
 
@@ -282,17 +278,10 @@ boxplot(dane_cleaned$stories, main = "wykres pudełkowy dla zmiennej 'stories' b
 
 Wykres pudełkowy dla zmiennej "stories" bez wartości odstających - został nałożony filtr nieuwzględniający wartości odstających.
 
-#Price w tys. oraz area w m2
-
+# Wizualizacja danych
 ```{r}
 completed_data$price <- completed_data$price / 1000
 completed_data$area <- completed_data$area * 0.092903
-
-```
-
-#Wykres 1 zmiennej
-
-```{r}
 ggplot(completed_data, aes(x=price))+
   geom_histogram(bins = 10)+
   labs(title="Ilośc domów z przedziałami cenowymi", x="Price", y="Ilość domów")+
@@ -300,53 +289,45 @@ ggplot(completed_data, aes(x=price))+
   facet_grid(~parking)
 ```
 
-#Zależnośc ceny od wielkości domu w podziale na połaczenie do głównej drogi
+## Zależność ceny od wielkości domu w podziale na połaczenie do głównej drogi
 
 ```{r}
-# Przekształcenie bedrooms na faktor (jeśli potrzebne do podziału)
 completed_data$bedfac <- as.factor(completed_data$bedrooms)
 
-# Wykres zależności ceny od wielkości domu
 ggplot(completed_data, aes(x = area, y = price, color = bedfac)) +
   geom_point(alpha = 0.7, size = 3) +
   scale_color_brewer(palette = "Set1") +
   theme_ipsum() +
-  
   facet_grid(~mainroad) +
   labs(
-    title = "Zależność ceny od wielkości domu z podzialem mainroad",
     x = "Wielkość domu",
     y = "Cena",
     color = "Liczba sypialni")+
   theme( text = element_text(family = "sans"))
-
-
 ```
 
-#Zależność ceny od sypialni z podziałem na prefarea
+## Zależność ceny od sypialni z podziałem na "prefarea"
 
 ```{r}
-# Wykres zależności ceny od wielkości domu
 ggplot(completed_data, aes(x = bedrooms, y = price, color = bedfac)) +
   geom_point(alpha = 0.7, size = 3) +
   scale_color_brewer(palette = "Set1") +
   theme_ipsum() +
   theme(
-    text = element_text(family = "sans")  # Użyj czcionki sans
+    text = element_text(family = "sans")  ## Użyj czcionki sans
   ) +
   facet_grid(~prefarea) +
   labs(
-    title = "Zależność ceny od sypialni z podziałem na prefarea",
     x = "ilość sypialni",
     y = "Cena",
     color = "Liczba sypialni"
   )
 ```
 
-#wykres ceny w zaleznosci od metrazu
+## wykres ceny w zaleznosci od metrazu
 
 ```{r}
-completed_data$prefarea1 <- as.factor(completed_data$prefarea)  # Zamiana na factor
+completed_data$prefarea1 <- as.factor(completed_data$prefarea)  ## Zamiana na factor
 
 p <- ggplot(completed_data, aes(x = price, y = area)) +
   geom_point(aes(color = prefarea1)) +  
@@ -358,13 +339,11 @@ p <- ggplot(completed_data, aes(x = price, y = area)) +
   theme_light()
 
 plotly::ggplotly(p)
-
 ```
 
-#Rozkład powierzchni domu w zależności od liczby pięter i ceny
-
+## Rozkład powierzchni domu w zależności od liczby pięter
 ```{r}
-completed_data$stories1 <- as.factor(completed_data$stories)
+completed_data$pietra <- as.factor(completed_data$stories)
 
 ggplot(completed_data, aes(x = stories, y = area)) +
   geom_boxplot(aes(group = stories), outlier.shape = NA) + 
@@ -375,26 +354,21 @@ ggplot(completed_data, aes(x = stories, y = area)) +
   ggtitle("Rozkład powierzchni domu w zależności od liczby pięter i ceny") +
   theme_minimal()
 
-library(dplyr)
-
 summary_table <- completed_data %>%
-  group_by(stories1) %>%
+  group_by(pietra) %>%
   summarise(
     Srednia_powierzchnia = mean(area, na.rm = TRUE),
     Mediana_powierzchnia = median(area, na.rm = TRUE),
-    Odchylenie_standardowe_powierzchnia = sd(area, na.rm = TRUE),
+    Std_powierzchnia = sd(area, na.rm = TRUE),
     Srednia_cena = mean(price, na.rm = TRUE),
     Mediana_cena = median(price, na.rm = TRUE),
-    Odchylenie_standardowe_cena = sd(price, na.rm = TRUE),
+    Std_cena = sd(price, na.rm = TRUE),
     Liczba_obserwacji = n()
   )
-print(summary_table)
-
-
+knitr::kable(summary_table)
 ```
 
-#Stworzonie kategorii dla cen poprzez średnią i odchylenie standardowe
-
+## Kategoryzacja cen poprzez średnią i odchylenie standardowe
 
 ```{r}
 mean_price <- mean(completed_data$price)
@@ -404,54 +378,49 @@ completed_data$z_score <- (completed_data$price - mean_price) / sd_price
 
 completed_data$price_category <- cut(
   completed_data$z_score,
-  breaks = c(-Inf, -1, 1, Inf),  # Z-score < -1 = tanie, -1 <= Z <= 1 = średnie, Z > 1 = drogie
+  breaks = c(-Inf, -1, 1, Inf),
   labels = c("tanie", "średnie", "drogie")
 )
-
-# Wynik
-print(completed_data)
 
 category_counts <- completed_data %>%
   group_by(price_category) %>%
   summarise(count = n())
-
 ```
 
-#Wykres przedstawiający rozkład cen na kategorię tani, średni i drogi
+## Rozkład cen na kategorie: tani, średni i drogi
 Wykres przedstawia ceny nieruchomości, które należą do agencji nieruchomości. Poprzez stworzenie 3 znaczników - tani, średni, drogi możemy przeanalizować w jaki sposób plasują się ceny z bazy danych.
 
 ```{r}
 ggplot(category_counts) +
   aes(
-    x0 = 0, y0 = 0, # position of pie center
-    r0 = 0, r = 1,  # inner and outer radius
-    amount = count, # size of pie slices
+    x0 = 0, y0 = 0,
+    r0 = 0, r = 1,
+    amount = count,
     fill = price_category
-  ) + 
+  ) +
   geom_arc_bar(stat = "pie") +
-  coord_fixed()  
+  coord_fixed()
 ```
-#Statystyka opisowa
 
-```{r echo=FALSE}
+```{r}
 etykiety<-c("1750-2750 kPLN","2750-3750 kPLN","3750-4750 kPLN","4750-5750 kPLN","5750-6750 kPLN","6750-7750 kPLN","7750-8750 kPLN","9750-10750 kPLN","10750-11750 kPLN","11750-12250 kPLN")
 limits<-cut(completed_data$price,seq(1750,12250,by=1000),labels=etykiety)
-tabela1<-freq(limits,type="html")
-
-
+tabela1<-freq(limits)
+knitr::kable(tabela1)
 ```
-Poniższy wykres kolumnowy przedstawia rozklad cen mieszkań z podziałem co 1000. Można wywnioskować, iż tak jak na wykresie kołowym, większość mieszkań jest blisko średniej ceny rynkowej. Tańsze mieszkania oraz droższe są w zdecydowanej mniejszości. Dodatkowo zaznaczono liniami jak ksztaltują się ceny mieszkań w podziale na ilość sypialni.
 
-```{r histogram, echo=FALSE}
+## Statystyka opisowa
+
+Poniższy wykres kolumnowy przedstawia rozkład cen mieszkań z podziałem co 1000. Można wywnioskować, iż tak jak na wykresie kołowym, większość mieszkań jest blisko średniej ceny rynkowej. Tańsze mieszkania oraz droższe są w zdecydowanej mniejszości. Dodatkowo zaznaczono liniami jak kształtują się ceny mieszkań w podziale na ilość sypialni.
+
+```{r histogram}
 hist(completed_data$price, breaks="FD", col="green", probability = TRUE,
      main="Ceny nieruchomości")
 
-# Linie gęstości dla różnych liczby sypialni
 lines(density(completed_data$price[completed_data$bedrooms == 1]), col=2)
 lines(density(completed_data$price[completed_data$bedrooms == 2]), col=3)
 lines(density(completed_data$price[completed_data$bedrooms == 3]), col=4)
 
-# Legenda
 legend("topright", 
        legend=c("Jedna sypialnia", "Dwie sypialnie", "Trzy sypialnie"),
        col=c(2, 3, 4), 
@@ -459,15 +428,12 @@ legend("topright",
        horiz=FALSE, 
        box.lty=0, 
        cex=0.8)
-
-
 ```
 
 
 ```{r}
-library(gtsummary)
 completed_data %>%
-  select(price,bedfac) %>%
+  select(price, bedfac) %>%
   tbl_summary(
     by=bedfac,
     type = all_continuous() ~ "continuous2",
@@ -482,7 +448,7 @@ completed_data %>%
   bold_labels() %>% 
   add_p(pvalue_fun = ~ style_pvalue(.x, digits = 2))
 ```
-##Wykres wiolinowy
+## Wykres wiolinowy
 
 Podstawowe statystyki opisowe cen nieruchomości jeżeli znajdują się w preferowanym obszarze (tak/nie - 1/0).
 Dla obu przypadków są widoczne obserwacje odstające dla zmiennej price. Mediana cen nieruchomości dla tych znajdujących się w preferowanej okolicy jest większa. W bazie więcej jest nieruchomości, które nie znajdują sie w preferowanej okolicy.
@@ -490,15 +456,7 @@ W przypadku nieruchomości nieznajdujących się w preferowanym obszarze, pierws
 Dla nieruchomości w preferowanym obszarze wiolina jest najszersza w okolicach mediany - najwięcej obserwacji kiedy cena jest bliska wartości środkowej - około 6 tys. 
 
 ```{r}
-install.packages("ggstatsplot")
-library(ggstatsplot)
 data(completed_data)
-library(tidyverse)
-install.packages("statsExpressions")
-library(statsExpressions)
-install.packages("mice")
-install.packages("rbibutils")
-View(completed_data)
 
 completed_data %>%
   filter(prefarea %in% c(0, 1))%>%
@@ -506,9 +464,8 @@ completed_data %>%
     y=price,
     x=prefarea
   )
-
 ```
-##Wykres kołowy
+## Wykres kołowy
 Jaki procent nieruchomości o powierzchni z danego przedziału posiada posiada wskazaną liczbę łazienek.
 Nawet w domach o największej powierzni jest tylko jedna łazienka.
 
@@ -516,9 +473,9 @@ Nawet w domach o największej powierzni jest tylko jedna łazienka.
 
 completed_data$area_category <- cut(
   completed_data$area, 
-  breaks = c(0, 2000, 5000, 10000, 16200),  # Granice przedziałów
-  labels = c("0-2000", "2001-5000", "5001-10000", "10001-1620"),  # Nazwy przedziałów
-  right = TRUE  # Prawostronne przedziały (np. 0-50 oznacza <=50)
+  breaks = c(0, 2000, 5000, 10000, 16200),
+  labels = c("0-2000", "2001-5000", "5001-10000", "10001-1620"),
+  right = TRUE
 )
 
 completed_data %>%
@@ -528,7 +485,9 @@ completed_data %>%
     x=bathrooms
   )
 ```
-##Korelogram 
+
+## Korelogram 
+
 Korelogram przedstawiający korelację pomiędzy zmiennymi dla domów z dwoma i sześcioma sypialniami z podziałem na dwie grupy - czy znajdują się przy głównej ulicy (1), czy nie (0).
 ```{r}
 grouped_ggcorrmat(
@@ -539,3 +498,6 @@ grouped_ggcorrmat(
   matrix.type  = "lower"
 )
 ```
+
+
+# Podsumowanie i wnioski

@@ -393,7 +393,8 @@ print(summary_table)
 
 ```
 
-#Stworzonie kategori dla cen poprzez średnią i odchylenie standardowe
+#Stworzonie kategorii dla cen poprzez średnią i odchylenie standardowe
+
 
 ```{r}
 mean_price <- mean(completed_data$price)
@@ -417,6 +418,7 @@ category_counts <- completed_data %>%
 ```
 
 #Wykres przedstawiający rozkład cen na kategorię tani, średni i drogi
+Wykres przedstawia ceny nieruchomości, które należą do agencji nieruchomości. Poprzez stworzenie 3 znaczników - tani, średni, drogi możemy przeanalizować w jaki sposób plasują się ceny z bazy danych.
 
 ```{r}
 ggplot(category_counts) +
@@ -438,6 +440,8 @@ tabela1<-freq(limits,type="html")
 
 
 ```
+Poniższy wykres kolumnowy przedstawia rozklad cen mieszkań z podziałem co 1000. Można wywnioskować, iż tak jak na wykresie kołowym, większość mieszkań jest blisko średniej ceny rynkowej. Tańsze mieszkania oraz droższe są w zdecydowanej mniejszości. Dodatkowo zaznaczono liniami jak ksztaltują się ceny mieszkań w podziale na ilość sypialni.
+
 ```{r histogram, echo=FALSE}
 hist(completed_data$price, breaks="FD", col="green", probability = TRUE,
      main="Ceny nieruchomości")
@@ -481,6 +485,7 @@ completed_data %>%
 ##Wykres wiolinowy
 
 Podstawowe statystyki opisowe cen nieruchomości jeżeli znajdują się w preferowanym obszarze (tak/nie - 1/0).
+
 ```{r}
 install.packages("ggstatsplot")
 library(ggstatsplot)

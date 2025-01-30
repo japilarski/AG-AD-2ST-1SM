@@ -1,6 +1,6 @@
 ---
 title: 'Analiza Danych Projekt'
-author: 'Jakub Zator, Mateusz Pałczyński, Jakub Pilarski'
+author: 'Jakub Zator 202288, Mateusz Pałczyński 206741, Jakub Pilarski 184815'
 date: '`r Sys.Date()`'
 output:
   html_document:

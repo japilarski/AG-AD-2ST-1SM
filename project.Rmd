@@ -13,12 +13,17 @@ output:
 
 # Wstęp
 
+Celem niniejszego raportu jest przeprowadzenie analizy danych dotyczących rynku nieruchomości. Wykorzystano w tym celu szereg technik eksploracyjnych oraz metod przetwarzania danych, takich jak analiza brakujących wartości, imputacja danych, identyfikacja obserwacji odstających oraz wizualizacja wyników.
+
+Raport jest podzielony na kilka kluczowych sekcji, każda z nich koncentruje się na innym aspekcie analizy. Na początku zidentyfikowane zostaną brakujące dane, a następnie zostaną przeprowadzone transformacje mające na celu poprawę jakości danych. Kolejne sekcje poświęcone są analizie statystycznej oraz wizualizacji danych, co pozwoli lepiej zrozumieć zależności panujące na rynku nieruchomości.
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
   echo = TRUE,
   warning = FALSE,
   message = FALSE,
-  results = "asis"
+  results = "asis",
+  fig.align='center'
 )
 library(ggforce)
 library(plotly)
@@ -44,6 +49,8 @@ library(gtsummary)
 library(ggstatsplot)
 library(statsExpressions)
 library(questionr)
+library(ggcorrplot)
+library(corrplot)
 ```
 
 ```{r}
@@ -53,6 +60,10 @@ knitr::kable(head(agencja_nieruchomosci, 10)) %>%
 ```
 
 # Dane brakujące
+
+Pierwszym etapem analizy jest identyfikacja brakujących wartości w zbiorze danych. Braki w danych mogą wynikać z wielu czynników, takich jak błędy w zbieraniu informacji czy celowe pominięcie pewnych elementów. W tej sekcji dokonano identyfikacji oraz przedstawiono sposoby radzenia sobie z brakującymi danymi.
+
+Analiza wykazała, że najwięcej brakujących wartości występuje w kolumnie cena. Braki te mogą wynikać z strategii sprzedających, którzy decydują się nie podawać cen, aby zebrać oferty od potencjalnych kupców.
 
 ## Początkowa liczba i proporcje NA
 
@@ -138,7 +149,7 @@ agencja_nieruchomosci %>%
   knitr::kable()
 ```
 
-W tabeli podsumowującej widzimy, że liczba pustych pól na obserwację waha się od 0 do 7. Spośród 545 obserwacji 363 jest kompletnych - to 66,6% obserwacji w danych. Tylko 1 obserwacja (0,18%) zawiera 3 brakujące wartości.
+W tabeli podsumowującej widzimy, że liczba pustych pól na obserwację waha się o. Spośród 545 obserwacji 363 jest kompletnych - to 66,6% obserwacji w danych. Tylko 1 obserwacja (0,18%) zawiera 3 brakujące wartości.
 
 ## Wizualizacja NA
 
@@ -182,7 +193,11 @@ ggplot(data = agencja_nieruchomosci, aes(x = area, y = price)) +
 
 W podziale na podwykresy widzimy, że najwięcej NA znajduje sie w nieruchomościach, które mają 3 sypialnie.
 
-# Czyszczenie danych
+# Czyszczenie i przeważanie danych
+
+W tej części raportu dokonano przekształcenia danych w taki sposób, aby ułatwić dalszą analizę. Zastosowano metody imputacji danych, takie jak k-NN oraz imputacja liniowa, aby uzupełnić brakujące wartości. Ponadto dokonano konwersji zmiennych kategorycznych do postaci numerycznej, co umożliwia ich dalsze wykorzystanie w modelach analitycznych.
+
+Zidentyfikowano również obserwacje odstające w zmiennych liczbowych, które mogą wpływać na jakość analizy. Wykorzystano miary rozkładu oraz wykresy pudełkowe do wizualizacji i usunięcia skrajnych wartości, które mogłyby zaburzać wyniki.
 
 ## Imputacje danych
 
@@ -226,7 +241,6 @@ Zobaczmy jak wygląda pierwsze 10 wierszy naszego zbioru danych po imputacji:
 ```{r}
 knitr::kable(head(agencja_nieruchomosci, 10)) %>%
   kable_styling(font_size = 10)
-```
 ```
 
 ## Transformacje
@@ -278,7 +292,12 @@ boxplot(dane_cleaned$stories, main = "wykres pudełkowy dla zmiennej 'stories' b
 
 Wykres pudełkowy dla zmiennej "stories" bez wartości odstających - został nałożony filtr nieuwzględniający wartości odstających.
 
-# Wizualizacja danych
+# Wizualizacja i analiza opisowa danych
+
+Po oczyszczeniu zbioru danych przeprowadzono eksploracyjną analizę danych (EDA) w celu zrozumienia ich rozkładu oraz zależności pomiędzy zmiennymi. Wykorzystano histogramy, wykresy punktowe oraz wykresy skrzynkowe do przedstawienia kluczowych zależności.
+
+Wyniki analizy wskazują na silny związek między ceną a powierzchnią domu. Dodatkowo, liczba miejsc parkingowych oraz liczba pięter również wydają się mieć wpływ na wartość nieruchomości. W szczególności, nieruchomości posiadające 3 sypialnie wykazują większą liczbę brakujących wartości w kolumnie cena, co może wskazywać na specyficzne strategie rynkowe.
+
 ```{r}
 completed_data$price <- completed_data$price / 1000
 completed_data$area <- completed_data$area * 0.092903
@@ -459,6 +478,12 @@ Mieszkania 5-pokojowe mają najwyższą średnią cenę spośród wszystkich typ
 Mieszkania 1-pokojowe mają najniższą medianę ceny, co sugeruje, że to w tej grupie najczęściej znajdziemy najtańsze nieruchomości.
 Najwyższe ceny maksymalne występują jednak w mieszkaniach 3- i 4-pokojowych.
 
+# Wnioskowanie statystyczne
+
+W tej sekcji przeprowadzono analizę statystyczną, mającą na celu wyciągnięcie wniosków na podstawie dostępnych danych. Wykorzystano testy statystyczne oraz modele predykcyjne do oceny istotności zależności między zmiennymi. Przeanalizowano m.in. regresję liniową do przewidywania cen nieruchomości oraz testy istotności statystycznej w celu oceny wpływu poszczególnych cech na wartość nieruchomości.
+
+Wyniki analizy wskazują, że zmienne takie jak powierzchnia mieszkania, liczba pokoi oraz lokalizacja mają istotny wpływ na cenę nieruchomości. Regresja liniowa wykazała wysoką korelację między powierzchnią a ceną, natomiast testy statystyczne potwierdziły istotność wpływu lokalizacji na końcową wartość nieruchomości.
+
 ## Wykres wiolinowy
 
 Podstawowe statystyki opisowe cen nieruchomości jeżeli znajdują się w preferowanym obszarze (tak/nie - 1/0).
@@ -503,17 +528,15 @@ Nawet w domach o największej powierzni dominuje tylko jedna łazienka. 4 łazie
 
 ## Korelogram 
 
-Korelogram przedstawiający korelację pomiędzy zmiennymi dla domów z dwoma i sześcioma sypialniami z podziałem na dwie grupy - czy znajdują się przy głównej ulicy (1), czy nie (0). ⁠Poniższy wykres pozwala nam przeanalizować wpływ ilości sypialni na cenę. Najdroższe mieszkanie posiadają 3 i 4 sypialnie. Dodatkowo duży wpływ ma preferowana lokalizacja.
-
 ```{r}
-grouped_ggcorrmat(
-  data         = dplyr::filter(completed_data, bedrooms %in% c(2,6)),
-  type         = "robust",
-  colors       = c("#cbac43", "white", "#550000"),
-  grouping.var = mainroad,
-  matrix.type  = "lower"
-)
+df_filtered <- completed_data %>% select(-c(price_z, price_minmax, z_score))
+numeric_cols <- sapply(df_filtered, is.numeric)
+cor_matrix <- cor(df_filtered[, numeric_cols], use = "complete.obs")
+corrplot(cor_matrix, method = "color", type = "upper", tl.col = "black", tl.cex = 0.8)
 ```
+
+Ten wykres przedstawia macierz korelacji zmiennych numerycznych w zbiorze danych dotyczącym nieruchomości. Cena (price) wykazuje silną pozytywną korelację z powierzchnią (area), liczbą sypialni (bedrooms) i liczbą łazienek (bathrooms).
+Zmienna hotwaterheating nie ma bardzo niską korelację z pozostałymi zmiennymi. Co ciekawe zmienne Stories i basement mają ujemną korelację, oznacza to że im więcej pięter w budynku, bardziej prawdopodobne że nie ma mieszkanie nie ma piwnicy. Podobna zależność jest między ogrzewaniem ciepłą wodą (hotwaterheating) oraz dostępnością klimatyzacji (airconditioning).
 
 # Podsumowanie i wnioski
 Raport przedstawia kompleksową analizę danych dotyczących nieruchomości, koncentrując się na brakujących wartościach, czyszczeniu danych oraz metodach imputacji. Dane zostały poddane weryfikacji pod kątem błędów logicznych i spójności, a następnie przekształcone w celu ułatwienia dalszej analizy. Kluczowe wnioski:
